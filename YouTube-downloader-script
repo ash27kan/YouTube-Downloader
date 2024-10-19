@@ -1,0 +1,61 @@
+from pytubefix import YouTube
+import ffmpeg
+
+YouTube._user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+
+def title_get(yt):
+    title_of_video = yt.title
+    print(title_of_video)
+    return title_of_video
+
+def download(yt):
+    video_streams = yt.streams.filter(file_extension='mp4')
+    print("Video streams")
+    for index, x in enumerate(video_streams, start=1):
+        print("[{}] {}\n".format(index, x))
+
+    audio_streams = yt.streams.filter(only_audio=True)
+    print("Audio streams:")
+    for index, y in enumerate(audio_streams, start=1):
+        print("[{}] {}\n".format(index, y))
+    
+    itag_video = input("enter your 'itag' for video: ")
+    itag_audio = input("enter your 'itag' for audio: ")
+    download_video = yt.streams.get_by_itag(itag_video)
+    download_audio = yt.streams.get_by_itag(itag_audio)
+    downloaded_video = download_video.download()
+    prefix = "video."
+    downloaded_video = prefix + downloaded_video
+    print("Video has downloaded")
+    downloaded_audio = download_audio.download()
+    prefix = "audio."
+    downloaded_video = prefix + downloaded_audio
+    print("Audio has downloaded")
+    title_of_video = title_get(yt)
+    ffmpeg_mixing(downloaded_video, downloaded_audio, title_of_video)
+
+def ffmpeg_mixing(downloaded_video, downloaded_audio, title_of_video):
+    print("Mixing process is gonna start")
+    video_input = ffmpeg.input(downloaded_video)
+    audio_input = ffmpeg.input(downloaded_audio)
+    output_file = "{}.mp4".format(title_of_video)
+        
+    ffmpeg.output(video_input, audio_input, output_file, vcodec='copy', acodec='aac').run(overwrite_output=True)
+    print("Mixing is done")
+
+def main():
+    print("python downloader is running")
+    user_input = input("enter your url: ")
+    yt = YouTube(user_input, use_po_token=True)
+
+    title_get(yt)
+    print("is this your video? Yes or No")
+    answer = input()
+    if answer.lower() == "yes":
+        download(yt)
+    else:
+        print("Until the next episode then")
+        return
+
+if __name__ == "__main__":
+    main()
